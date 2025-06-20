@@ -9,13 +9,28 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@editorjs/checklist": "^1.6.0",
+    "@editorjs/code": "^2.9.3",
+    "@editorjs/editorjs": "^2.30.8",
+    "@editorjs/embed": "^2.7.6",
+    "@editorjs/header": "^2.8.8",
+    "@editorjs/image": "^2.10.2",
+    "@editorjs/list": "^2.0.8",
+    "@editorjs/marker": "^1.4.0",
+    "@editorjs/quote": "^2.7.6",
+    "@editorjs/table": "^2.4.5",
+    "@reduxjs/toolkit": "^2.8.2",
+    "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.4"
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0",
+    "redux-persist": "^6.0.0",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "eslint": "^9",
-    "eslint-config-next": "15.3.4",
-    "@eslint/eslintrc": "^3"
+    "eslint-config-next": "15.3.4"
   }
 }
