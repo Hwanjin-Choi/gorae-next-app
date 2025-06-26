@@ -4,8 +4,11 @@ import StoreProvider from "./StoreProvider";
 import ClientWrapper from "./ClientWrapper";
 
 export const metadata = {
-  title: "지성의 바다",
+  title: "고래 - 지식의 바다",
   description: "세상의 모든 지식을 여기에",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -1,3 +1,6 @@
+// src/components/ThemeEditor.jsx
+"use client";
+
 import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import EditorJS from "@editorjs/editorjs";
@@ -10,12 +13,12 @@ import Checklist from "@editorjs/checklist";
 import Quote from "@editorjs/quote";
 import Marker from "@editorjs/marker";
 import Embed from "@editorjs/embed";
-
-// 이 경로는 실제 프로젝트 구조에 맞게 조정해야 합니다.
 import {
   editorHeaderPlaceholders,
   getRandomItem,
 } from "../assets/RandomPhrases";
+import apiClient from "@/api";
+
 const EditorWrapper = styled.div`
   position: relative;
   background-color: ${({ theme }) => theme.bg_page};
@@ -24,16 +27,21 @@ const EditorWrapper = styled.div`
   padding: 1.5rem;
   box-shadow: ${({ theme }) => theme.utils.shadow_sm};
   transition: background-color 0.3s, border-color 0.3s;
-  min-height: 50vh;
+
+  min-height: ${({ editorType }) =>
+    editorType === "answer" ? "25vh" : "50vh"};
+
   @media (max-width: 768px) {
     padding: 0.75rem;
+    min-height: ${({ editorType }) =>
+      editorType === "answer" ? "10vh" : "40vh"};
   }
 
   .codex-editor__redactor {
     padding-top: 1.5rem !important;
+    padding-bottom: 100px !important;
   }
 
-  /* ... 다른 내부 요소 스타일 ... */
   .ce-block__content,
   .ce-toolbar__content {
     max-width: 90%;
@@ -52,7 +60,6 @@ const EditorWrapper = styled.div`
 
     &:hover {
       transform: scale(1.1);
-      /* 호버 시 배경색이 유지되도록 수정했습니다. */
       background-color: ${({ theme }) => theme.text};
     }
 
@@ -103,30 +110,36 @@ const EditorWrapper = styled.div`
   }
 `;
 
-const ThemedEditor = ({ editorRef, bodyPlaceholder }) => {
+const ThemedEditor = ({
+  editorRef,
+  bodyPlaceholder,
+  initialData,
+  editorType,
+  holderId = "editorjs-container",
+}) => {
   const [headerPlaceholder, setHeaderPlaceholder] = useState("");
 
   useEffect(() => {
-    // getRandomItem을 한 번만 호출하도록 수정했습니다.
     setHeaderPlaceholder(getRandomItem(editorHeaderPlaceholders));
   }, []);
 
   useEffect(() => {
-    // Editor.js가 중복으로 생성되는 것을 방지합니다.
     if (editorRef.current) {
       return;
     }
 
-    // Placeholder들이 모두 준비된 후에 Editor.js를 생성합니다.
-    if (bodyPlaceholder && headerPlaceholder) {
+    if (headerPlaceholder && document.getElementById(holderId)) {
       const editor = new EditorJS({
-        holder: "editorjs-container",
+        holder: holderId,
         tools: {
           header: {
             class: Header,
             inlineToolbar: true,
             config: {
-              placeholder: headerPlaceholder,
+              placeholder:
+                editorType === "question"
+                  ? headerPlaceholder
+                  : "답변의 핵심 내용을 요약해주세요.",
             },
           },
           list: { class: List, inlineToolbar: true },
@@ -134,13 +147,40 @@ const ThemedEditor = ({ editorRef, bodyPlaceholder }) => {
             class: ImageTool,
             config: {
               uploader: {
-                uploadByFile(file) {
-                  return new Promise((resolve) => {
-                    setTimeout(() => {
-                      const temporaryUrl = URL.createObjectURL(file);
-                      resolve({ success: 1, file: { url: temporaryUrl } });
-                    }, 1000);
-                  });
+                async uploadByFile(file) {
+                  const formData = new FormData();
+                  formData.append("image", file); // API 명세와 동일한 'image' 키를 사용합니다.
+
+                  try {
+                    // 1. API 엔드포인트를 명세에 맞게 수정합니다.
+                    const response = await apiClient.post(
+                      "/post/v1/image", // 수정된 엔드포인트
+                      formData,
+                      {
+                        headers: {
+                          "Content-Type": "multipart/form-data",
+                        },
+                      }
+                    );
+
+                    // 2. 서버 응답 구조에 맞게 URL을 추출합니다.
+                    if (response.data && response.data.data) {
+                      return {
+                        success: 1,
+                        file: {
+                          url: response.data.data, // response.data.data에 URL이 담겨있습니다.
+                        },
+                      };
+                    } else {
+                      console.error(
+                        "업로드 성공했으나, 응답에 URL이 없습니다."
+                      );
+                      return { success: 0 };
+                    }
+                  } catch (error) {
+                    console.error("이미지 업로드에 실패했습니다:", error);
+                    return { success: 0 };
+                  }
                 },
               },
             },
@@ -152,7 +192,7 @@ const ThemedEditor = ({ editorRef, bodyPlaceholder }) => {
           marker: Marker,
           embed: Embed,
         },
-        data: {},
+        data: initialData || {},
         placeholder: bodyPlaceholder,
       });
       editorRef.current = editor;
@@ -164,9 +204,16 @@ const ThemedEditor = ({ editorRef, bodyPlaceholder }) => {
         editorRef.current = null;
       }
     };
-  }, [editorRef, headerPlaceholder, bodyPlaceholder]);
+  }, [
+    editorRef,
+    headerPlaceholder,
+    bodyPlaceholder,
+    initialData,
+    editorType,
+    holderId,
+  ]);
 
-  return <EditorWrapper id="editorjs-container" />;
+  return <EditorWrapper id={holderId} editorType={editorType} />;
 };
 
 export default ThemedEditor;

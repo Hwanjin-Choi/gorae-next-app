@@ -29,6 +29,12 @@ export const editorBodyPlaceholders = [
   "세상의 지성들이 당신의 질문을 기다리고 있습니다.",
   "막혔던 부분에 대해 자세히 설명해주시면 좋습니다.",
 ];
+export const editorCommentPlaceholders = [
+  "여러분의 한줄이 작성자에게 큰 도움이 될 겁니다.",
+  "완벽하지 않아도 돼요, 본인이 겪은 상황에 도움을 주면 됩니다.",
+  "세상의 지성들이 당신의 답변을 기다리고 있습니다.",
+  "짧은 지식이어도 걱정 마세요. ",
+];
 
 // 배열에서 랜덤한 아이템을 하나 선택하는 유틸리티 함수
 export const getRandomItem = (arr) => {

@@ -1,21 +1,29 @@
+"use client";
+
 import React, { useState } from "react";
 import styled from "styled-components";
 import Link from "next/link";
+import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
-import Image from "next/image";
-// react-icons 라이브러리를 사용하여 아이콘을 가져옵니다.
+import { logoutUser } from "../redux/slices/userSlice"; // 로그아웃 액션
+import { useRouter } from "next/navigation";
+
+// 아이콘 라이브러리
 import {
   FaFeatherAlt,
   FaSearch,
-  FaUserCircle,
   FaSun,
   FaMoon,
   FaBars,
   FaTimes,
+  FaTrophy, // 랭킹 아이콘
+  FaSignOutAlt, // 로그아웃 아이콘
 } from "react-icons/fa";
 
+import UserProfile from "../components/common/UserProfile"; // UserProfile 컴포넌트
 import gorae from "../assets/logo/gorae.svg";
+
 // =============================================================================
 // 🎨 Styled Components
 // =============================================================================
@@ -42,8 +50,9 @@ const LogoLink = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.5rem;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: ${({ theme }) => theme.font.weight.bold};
   color: ${({ theme }) => theme.text};
   text-decoration: none;
@@ -52,82 +61,83 @@ const LogoLink = styled(Link)`
   .logo-image {
     transition: transform 0.3s ease-in-out;
   }
-  img {
-    height: 55px;
-    width: 70px;
-    transition: transform 0.3s ease-in-out; // 이미지 전환 효과
-    @media (max-width: 768px) {
-      height: 32px;
-      width: 50px;
-    }
-  }
 
-  /* 마우스를 올렸을 때의 스타일 변화 */
   &:hover {
-    background-color: ${({ theme }) => theme.bg}; // 은은한 배경색 추가
-    color: ${({ theme }) => theme.primary}; // 텍스트 색상 변경
+    background-color: ${({ theme }) => theme.bg};
+    color: ${({ theme }) => theme.primary};
     text-decoration: none;
-    img {
-      transform: scaleX(-1); // 이미지를 좌우로 반전시킵니다.
+    .logo-image {
+      transform: scaleX(-1);
     }
   }
 `;
 
-const Nav = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-
-  @media (max-width: 768px) {
-    display: none; // 모바일에서는 숨깁니다.
-  }
-`;
-
-const ActionsContainer = styled.div`
+const NavContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
 
-  @media (max-width: 768px) {
-    display: none; // 모바일에서는 숨깁니다.
+  @media (max-width: 1024px) {
+    display: none; // 모바일 및 태블릿에서는 숨깁니다.
   }
 `;
 
-const AskButton = styled(Link)`
-  background-color: ${({ theme }) => theme.primary};
-  color: white;
+const NavButton = styled(Link)`
   padding: 0.5rem 1rem;
   border-radius: 6px;
   text-decoration: none;
   font-weight: ${({ theme }) => theme.font.weight.semibold};
+  color: ${({ theme }) => theme.text_secondary};
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.bg};
+    color: ${({ theme }) => theme.text};
+  }
+`;
+const NonNavButton = styled.button`
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: ${({ theme }) => theme.font.weight.semibold};
+  color: ${({ theme }) => theme.text_secondary};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  &:hover {
+    background-color: ${({ theme }) => theme.bg};
+    color: ${({ theme }) => theme.text};
+  }
+`;
+const AskButton = styled(Link)`
+  background-color: ${({ theme }) => theme.primary};
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: ${({ theme }) => theme.font.weight.bold};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s;
 
   &:hover {
     opacity: 0.9;
   }
 `;
 
-const IconButton = styled.button`
+const MobileMenuButton = styled.button`
+  display: none;
   background: none;
   border: none;
-  color: ${({ theme }) => theme.text_secondary};
-  font-size: 1.25rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-
-  &:hover {
-    color: ${({ theme }) => theme.primary};
-  }
-`;
-
-const MobileMenuButton = styled(IconButton)`
-  display: none;
+  color: ${({ theme }) => theme.text};
   font-size: 1.5rem;
+  cursor: pointer;
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     display: flex;
   }
 `;
@@ -135,75 +145,103 @@ const MobileMenuButton = styled(IconButton)`
 const MobileNav = styled.div`
   position: fixed;
   top: 0;
-  left: 0;
-  width: 100%;
+  right: 0;
+  width: 300px;
   height: 100%;
   background-color: ${({ theme }) => theme.bg_page};
+  box-shadow: ${({ theme }) => theme.utils.shadow_lg};
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
+  padding: 4rem 2rem;
+  gap: 1.5rem;
   transform: ${({ isOpen }) => (isOpen ? "translateX(0)" : "translateX(100%)")};
   transition: transform 0.3s ease-in-out;
 
   .close-button {
     position: absolute;
     top: 20px;
-    right: 32px;
+    right: 20px;
+    font-size: 1.8rem;
   }
 `;
+
+// =============================================================================
+// 📖 Header Component
+// =============================================================================
 
 function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dispatch = useDispatch();
+  const router = useRouter();
+
+  // Redux 스토어에서 로그인 상태와 사용자 정보를 가져옵니다.
+  const { isLoggedIn, userName, profileImage } = useSelector(
+    (state) => state.user
+  );
   const themeMode = useSelector((state) => state.theme.mode);
 
-  const handleToggleTheme = () => {
-    dispatch(toggleTheme());
+  const handleToggleTheme = () => dispatch(toggleTheme());
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    router.push("/login"); // 로그아웃 후 메인 페이지로 이동
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const LoggedOutMenu = () => (
+    <NavContainer>
+      <NavButton href="/login">로그인</NavButton>
+      <NavButton href="/register">회원가입</NavButton>
+      <NonNavButton onClick={handleToggleTheme}>
+        {themeMode === "light" ? <FaMoon /> : <FaSun />}
+      </NonNavButton>
+    </NavContainer>
+  );
 
-  const DesktopMenu = () => (
-    <>
-      <Nav>{/* 네비게이션 메뉴 (추후 확장 가능) */}</Nav>
-      <ActionsContainer>
-        <AskButton href="/ask">
-          <FaFeatherAlt />
-          질문하기
-        </AskButton>
-        <IconButton>
-          <FaSearch />
-        </IconButton>
-        <IconButton onClick={handleToggleTheme}>
-          {themeMode === "light" ? <FaMoon /> : <FaSun />}
-        </IconButton>
-        <IconButton>
-          <FaUserCircle />
-        </IconButton>
-      </ActionsContainer>
-    </>
+  const LoggedInMenu = () => (
+    <NavContainer>
+      <AskButton href="/ask">
+        <FaFeatherAlt /> 질문하기
+      </AskButton>
+      <NavButton href="/view">
+        <FaSearch /> 질문검색
+      </NavButton>
+      <NavButton href="/ranking">
+        <FaTrophy /> 랭킹
+      </NavButton>
+      <NonNavButton onClick={handleLogout}>
+        <FaSignOutAlt /> 로그아웃
+      </NonNavButton>
+      <NonNavButton onClick={handleToggleTheme}>
+        {themeMode === "light" ? <FaMoon /> : <FaSun />}
+      </NonNavButton>
+
+      <UserProfile
+        onClick={() => (window.location.href = "/my-page")}
+        name={userName}
+        profileImage={profileImage}
+      />
+    </NavContainer>
   );
 
   return (
     <>
       <HeaderContainer>
-        <LogoLink href="/">
-          {/* 전하의 요청에 맞춰 img 태그를 사용합니다. */}
+        <LogoLink href="/view">
           <Image
             src={gorae}
             alt="고래 로고"
-            width={32}
-            height={32}
+            width={70}
+            height={55}
             className="logo-image"
+            priority
           />
-          <span>지식의 바다 </span>
+          <span>지식의 바다</span>
         </LogoLink>
-        <DesktopMenu />
+
+        {isLoggedIn ? <LoggedInMenu /> : <LoggedOutMenu />}
+
         <MobileMenuButton onClick={toggleMobileMenu}>
           <FaBars />
         </MobileMenuButton>
@@ -213,19 +251,38 @@ function Header() {
         <MobileMenuButton className="close-button" onClick={toggleMobileMenu}>
           <FaTimes />
         </MobileMenuButton>
-        <AskButton href="/ask" onClick={toggleMobileMenu}>
-          <FaFeatherAlt />
-          질문하기
-        </AskButton>
-        <IconButton>
-          <FaSearch />
-        </IconButton>
-        <IconButton onClick={handleToggleTheme}>
-          {themeMode === "light" ? <FaMoon /> : <FaSun />}
-        </IconButton>
-        <IconButton>
-          <FaUserCircle />
-        </IconButton>
+        {isLoggedIn ? (
+          <>
+            <UserProfile name={userName} profileImage={profileImage} />
+            <AskButton href="/ask" onClick={toggleMobileMenu}>
+              <FaFeatherAlt /> 질문하기
+            </AskButton>
+            <NavButton href="/search" onClick={toggleMobileMenu}>
+              <FaSearch /> 질문검색
+            </NavButton>
+            <NavButton href="/ranking" onClick={toggleMobileMenu}>
+              <FaTrophy /> 랭킹
+            </NavButton>
+            <NonNavButton onClick={handleLogout}>
+              <FaSignOutAlt /> 로그아웃
+            </NonNavButton>
+            <NonNavButton onClick={handleToggleTheme}>
+              {themeMode === "light" ? <FaMoon /> : <FaSun />}
+            </NonNavButton>
+          </>
+        ) : (
+          <>
+            <NavButton href="/login" onClick={toggleMobileMenu}>
+              로그인
+            </NavButton>
+            <NavButton href="/register" onClick={toggleMobileMenu}>
+              회원가입
+            </NavButton>
+            <NonNavButton onClick={handleToggleTheme}>
+              {themeMode === "light" ? <FaMoon /> : <FaSun />}
+            </NonNavButton>
+          </>
+        )}
       </MobileNav>
     </>
   );

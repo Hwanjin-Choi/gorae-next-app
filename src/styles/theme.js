@@ -12,6 +12,7 @@ export const lightTheme = {
   accent: "#F59E0B",
   bg: "#F8F9FA",
   bg_page: "#FFFFFF",
+  bg_component: "#c6daed", // 라이트 모드용 컴포넌트 배경색 (추가)
   text: "#1F2937",
   text_secondary: "#6B7280",
   text_subtle: "#9CA3AF",
@@ -27,6 +28,7 @@ export const darkTheme = {
   accent: "#FBBF24",
   bg: "#111827",
   bg_page: "#1F2937",
+  bg_component: "#334155", // 다크 모드용 컴포넌트 배경색 (추가)
   text: "#F9FAFB",
   text_secondary: "#9CA3AF",
   text_subtle: "#6B7280",
@@ -107,7 +109,7 @@ const typography = {
   body: css`
     font-size: ${({ theme }) => theme.font.size.body}; /* 1rem */
     @media (max-width: 768px) {
-      font-size: 0.75rem;
+      font-size: 1.5rem;
     }
   `,
 };
@@ -172,7 +174,7 @@ export const GlobalStyle = createGlobalStyle`
   /* 모바일 환경을 위한 반응형 타이포그래피 (새로 추가된 부분) */
   /* 화면 너비가 768px 이하일 때 적용됩니다.                  */
   /* ======================================================= */
-  @media (max-width: 768px) {
+  /* @media (max-width: 768px) {
     h1 { font-size: 1rem; }
     h2 { font-size: 0.75rem; }
     h3 { font-size: 0.5rem; }
@@ -181,7 +183,7 @@ export const GlobalStyle = createGlobalStyle`
     p {
       font-size: 0.95rem;
     }
-  }
+  } */
 `;
 
 // 테마 객체에 font와 utils를 포함하여 export

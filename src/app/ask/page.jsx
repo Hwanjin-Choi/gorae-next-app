@@ -1,6 +1,10 @@
 "use client";
+
 import React, { useRef, useState, useEffect } from "react";
 import styled, { css } from "styled-components";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+
 import ThemedEditor from "../../components/ThemeEditor";
 import {
   pageTitles,
@@ -10,9 +14,11 @@ import {
 } from "../../assets/RandomPhrases";
 import { ErrorProvider, useError } from "../../context/ErrorContext";
 import { FaExclamationCircle } from "react-icons/fa";
+import { useModal } from "../../context/ModalContext";
+import apiClient from "@/api";
 
 // =============================================================================
-// 🎨 Styled Components
+// 🎨 Styled Components (이전과 동일)
 // =============================================================================
 
 const PageContainer = styled.div`
@@ -53,7 +59,6 @@ const PostTitleInput = styled.input`
     color: ${({ theme }) => theme.text_subtle};
   }
 
-  /* isError prop이 true일 때, 테두리를 에러 색상으로 변경합니다. */
   ${({ isError }) =>
     isError &&
     css`
@@ -65,9 +70,7 @@ const PostTitleInput = styled.input`
     `}
 `;
 
-// 에디터 컨테이너에도 에러 스타일을 적용합니다.
 const EditorContainer = styled.div`
-  /* isError prop이 true일 때, ThemedEditor 주위에 빨간 테두리를 표시합니다. */
   & > div {
     transition: border-color 0.2s;
     border-color: ${({ isError, theme }) =>
@@ -94,9 +97,13 @@ const SubmitButton = styled.button`
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.utils.shadow_md};
   }
+
+  &:disabled {
+    background-color: ${({ theme }) => theme.text_subtle};
+    cursor: not-allowed;
+  }
 `;
 
-// 에러 메시지를 표시할 컴포넌트
 const ErrorMessage = styled.p`
   color: ${({ theme }) => theme.error};
   font-size: ${({ theme }) => theme.font.size.caption};
@@ -107,17 +114,22 @@ const ErrorMessage = styled.p`
   gap: 0.25rem;
 `;
 
-// 질문 작성 페이지의 주요 로직을 담는 내부 컴포넌트
+// =============================================================================
+// 📖 페이지 로직
+// =============================================================================
+
 function AskQuestionForm() {
+  const router = useRouter();
   const editorInstanceRef = useRef(null);
   const [title, setTitle] = useState("");
-  // **수정된 부분**: 이제 errors와 setErrors를 올바르게 사용합니다.
   const { errors, setErrors } = useError();
   const [phrases, setPhrases] = useState({
     title: "",
     subtitle: "",
     editorBodyPlaceholder: "",
   });
+  const { openModal } = useModal();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setPhrases({
@@ -135,18 +147,15 @@ function AskQuestionForm() {
   };
 
   const handleSave = async () => {
+    if (isLoading) return; // 로딩 중 중복 클릭 방지
     if (!editorInstanceRef.current) return;
 
+    // --- 유효성 검사 ---
     const editorData = await editorInstanceRef.current.save();
     const validationErrors = {};
-
-    if (!title.trim()) {
-      validationErrors.title = "제목을 입력해주십시오.";
-    }
-
-    if (editorData.blocks.length === 0) {
+    if (!title.trim()) validationErrors.title = "제목을 입력해주십시오.";
+    if (editorData.blocks.length === 0)
       validationErrors.content = "내용을 입력해주십시오.";
-    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -154,9 +163,36 @@ function AskQuestionForm() {
     }
 
     setErrors({});
-    console.log("저장될 제목:", title);
-    console.log("저장될 내용:", JSON.stringify(editorData));
-    alert("질문이 성공적으로 등록되었습니다. (콘솔 확인)");
+    setIsLoading(true); // 5. API 호출 시작
+
+    // --- API 요청 페이로드 생성 ---
+    const requestPayload = {
+      title: title,
+      content: editorData, // 백엔드 DTO가 객체를 받는다면 그대로 전달
+    };
+
+    console.log(requestPayload);
+
+    // --- API 호출 ---
+    try {
+      const response = await apiClient.post(
+        "/post/v1/questions/create",
+        requestPayload
+      );
+
+      const newQuestionId = response.data.data;
+
+      openModal({
+        title: "질문 등록 성공!",
+        message: `새로운 질문이 성공적으로 등록되었습니다`,
+        onConfirm: () => router.push(`/question/${newQuestionId}`),
+      });
+    } catch (error) {
+      console.error("질문 등록 실패:", error);
+      alert("질문 등록에 실패하였습니다. 다시 시도해주십시오.");
+    } finally {
+      setIsLoading(false); // 7. API 호출 종료 (성공/실패 무관)
+    }
   };
 
   return (
@@ -192,13 +228,14 @@ function AskQuestionForm() {
           </ErrorMessage>
         )}
 
-        <SubmitButton onClick={handleSave}>질문 등록하기</SubmitButton>
+        <SubmitButton onClick={handleSave} disabled={isLoading}>
+          {isLoading ? "등록 중..." : "질문 등록하기"}
+        </SubmitButton>
       </main>
     </PageContainer>
   );
 }
 
-// 최종적으로 페이지 컴포넌트를 ErrorProvider로 감싸서 내보냅니다.
 function AskQuestionPage() {
   return (
     <ErrorProvider>
@@ -207,6 +244,7 @@ function AskQuestionPage() {
   );
 }
 
+// Next.js의 App Router 방식에서는 이 부분이 페이지의 진입점이 됩니다.
 export default function AskPage() {
   return <AskQuestionPage />;
 }

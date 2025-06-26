@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import { useEffect } from "react";
 import { syncThemeWithSystem } from "../redux/slices/themeSlice";
 import styled from "styled-components";
+import { ModalProvider } from "@/context/ModalContext";
 
 const MainContentContainer = styled.main`
   width: 100%;
@@ -40,8 +41,10 @@ export default function ClientWrapper({ children }) {
     <ThemeProvider theme={currentTheme}>
       <GlobalStyle />
       {/* Redux 상태가 완전히 로드되기 전까지 Header 렌더링을 피하는 것이 안전할 수 있습니다. */}
-      {themeMode && <Header />}
-      <MainContentContainer>{children}</MainContentContainer>
+      <ModalProvider>
+        {themeMode && <Header />}
+        <MainContentContainer>{children}</MainContentContainer>
+      </ModalProvider>
     </ThemeProvider>
   );
 }
