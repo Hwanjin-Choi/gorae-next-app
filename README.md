@@ -34,34 +34,7 @@
 
 ---
 
-/src
-├── api/
-│ └── index.js # Axios 인스턴스 설정 (인터셉터 포함)
-├── app/
-│ ├── (pages) # Next.js App Router 기반 페이지
-│ │ ├── ask/ # 질문 작성 페이지
-│ │ ├── login/ # 로그인 페이지
-│ │ ├── my-page/ # 마이페이지
-│ │ ├── question/[id]/ # 질문 상세 페이지
-│ │ └── ...
-│ ├── ClientWrapper.jsx # 클라이언트 측 전용 로직 래퍼 (테마 등)
-│ ├── layout.js # 전역 레이아웃
-│ └── StoreProvider.jsx # Redux Provider
-├── assets/ # 이미지, 폰트 등 정적 자원
-├── components/
-│ ├── answers/ # 답변 관련 컴포넌트 (BlockRenderer, AnswerDisplay)
-│ ├── common/ # 공용 컴포넌트 (Pagination, Modal, UserProfile 등)
-│ └── (feature)/ # 특정 기능 컴포넌트 (Header, ThemeEditor)
-├── context/
-│ ├── ModalContext.jsx # 전역 모달 컨텍스트
-│ └── ErrorContext.jsx # 폼 에러 컨텍스트
-├── lib/
-│ └── StyledComponentsRegistry.jsx # Styled-components SSR 설정
-├── redux/
-│ ├── slices/ # 기능별 Redux Slice (user, question, comment 등)
-│ └── store.js # Redux 스토어 및 Persist 설정
-└── styles/
-└── theme.js # 라이트/다크 테마 및 전역 스타일 정의
+![Image](https://github.com/user-attachments/assets/37867f86-ba3c-4f51-a4d7-f07f14c15f05)
 
 ---
 
