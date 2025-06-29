@@ -34,9 +34,7 @@
 
 ---
 
-![Image](https://github.com/user-attachments/assets/37867f86-ba3c-4f51-a4d7-f07f14c15f05)
-
----
+## <img width="732" alt="Image" src="https://github.com/user-attachments/assets/87765757-fc5e-4f47-84ba-7390a0bc1da2" />
 
 ## ✨ 프로젝트의 강점
 
