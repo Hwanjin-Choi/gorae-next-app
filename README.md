@@ -24,7 +24,6 @@
 | **Styling**          | `Styled-components`              | CSS-in-JS 라이브러리로, 컴포넌트 기반의 동적 스타일링 및 테마 기능을 구현했습니다.         |
 | **Data Fetching**    | `Axios`                          | Interceptor를 활용하여 API 요청/응답을 중앙에서 관리하고, 토큰 기반 인증을 처리합니다.     |
 | **Text Editor**      | `Editor.js`                      | 블록 스타일의 확장성 높은 WYSIWYG 에디터를 적용했습니다.                                   |
-| **Deployment**       | `Vercel` (권장)                  | Next.js에 최적화된 배포 환경을 제공합니다.                                                 |
 
 ---
 
